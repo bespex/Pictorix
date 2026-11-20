@@ -64,6 +64,7 @@ export const api = {
     invoke<Journal>("apply_result", { request }),
   revertLast: (folder: string) => invoke<RevertReport>("revert_last", { folder }),
   openFolder: (path: string) => invoke<void>("open_folder", { path }),
+  selfUpdateSupported: () => invoke<boolean>("self_update_supported"),
 };
 
 /** URL the web view can load a local image from. */

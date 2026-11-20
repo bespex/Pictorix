@@ -128,6 +128,17 @@ fn open_folder(path: String) -> Result<(), String> {
     tauri_plugin_opener::open_path(path, None::<&str>).map_err(|e| e.to_string())
 }
 
+/// How this installation gets updates: the AppImage and the Windows installer
+/// update themselves through Tauri's updater; a .deb is kept current by APT
+/// (the be spex package repository), so the app only checks in those two cases.
+#[tauri::command]
+fn self_update_supported() -> bool {
+    if cfg!(debug_assertions) {
+        return false;
+    }
+    cfg!(windows) || (cfg!(target_os = "linux") && std::env::var_os("APPIMAGE").is_some())
+}
+
 /// Like the original iorg: nearly the full screen height, at most 3:2.
 fn size_main_window(app: &tauri::App) {
     let Some(window) = app.get_webview_window("main") else { return };
@@ -147,6 +158,8 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             if let Ok(cache) = app.path().app_cache_dir() {
                 let thumbs = cache.join("thumbnails");
@@ -166,7 +179,8 @@ pub fn run() {
             journal_load,
             apply_result,
             revert_last,
-            open_folder
+            open_folder,
+            self_update_supported
         ])
         .run(tauri::generate_context!())
         .expect("error while running Pictorix");

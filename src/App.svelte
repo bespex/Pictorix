@@ -10,6 +10,7 @@
   import { setLang, t, tk } from "./lib/i18n.svelte";
   import { dialog } from "./lib/dialog.svelte";
   import { rememberFolder } from "./lib/recent";
+  import { offerUpdate } from "./lib/updates";
   import Welcome from "./components/Welcome.svelte";
   import ModeSelect from "./components/ModeSelect.svelte";
   import VoteScreen from "./components/VoteScreen.svelte";
@@ -41,7 +42,7 @@
   });
 
   onMount(() => {
-    start();
+    start().then(() => offerUpdate(() => screen.kind !== "vote" && !dialog.current));
     const unlisten = getCurrentWebview().onDragDropEvent((event) => {
       const payload = event.payload;
       if (payload.type === "enter" || payload.type === "over") dragging = true;

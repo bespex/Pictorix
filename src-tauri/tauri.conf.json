@@ -33,25 +33,34 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["deb", "rpm", "appimage", "nsis", "msi"],
+    "targets": ["deb", "appimage", "nsis"],
     "category": "Photography",
     "shortDescription": "Sort, rank and rate photos one decision at a time",
     "longDescription": "Pictorix shows one image or one pair of images at a time and asks a single question. When you are done, it renames the files or moves them into folders.",
     "copyright": "Copyright (c) 2023-2026 Bert Speckels, MIT License",
     "license": "MIT",
     "publisher": "Bert Speckels",
-    "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
-      "icons/icon.icns",
-      "icons/icon.ico"
-    ],
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
     "linux": {
-      "deb": { "section": "graphics" }
+      "deb": {
+        "section": "graphics"
+      }
     },
     "windows": {
-      "nsis": { "installMode": "currentUser" }
+      "nsis": {
+        "installMode": "currentUser"
+      }
+    },
+    "createUpdaterArtifacts": true,
+    "homepage": "https://github.com/bespex/Pictorix"
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEI5N0MxRTlFMjlGN0FCNkQKUldSdHEvY3BuaDU4dVJ4WVlqTll2b25sMmdhUlVjNXJhZDFZMEZNU3RxeVlqdXRZWlJyeGdsbUoK",
+      "endpoints": ["https://github.com/bespex/Pictorix/releases/latest/download/latest.json"],
+      "windows": {
+        "installMode": "passive"
+      }
     }
   }
 }
