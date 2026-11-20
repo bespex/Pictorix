@@ -32,8 +32,10 @@ const THEMES = ["light", "dark"];
 const CATEGORIES = ["birds", "fantasy", "cats"];
 const categorized = ["birds", "birds", "birds", "fantasy", "birds", "fantasy", "cats", "birds"];
 const SHOTS = [
+  { name: "welcome", welcome: true },
   { name: "select", keys: ["1"] },
   { name: "order", mode: "order", keys: ["Enter", "ArrowLeft", "Enter", "ArrowLeft", "Enter"] },
+  { name: "knockout", mode: "full-knockout", keys: ["Enter", "ArrowLeft", "Enter", "Enter"] },
   { name: "rate", mode: "rate", keys: ["8", "6", "9", "7"] },
   { name: "categorize", session: { mode: "categorize", answers: categorized.slice(0, 5), categories: CATEGORIES }, resume: true },
   { name: "summary", session: { mode: "categorize", answers: categorized, categories: CATEGORIES }, resume: true },
@@ -84,7 +86,8 @@ function demoFor(shot) {
     savedAt: Date.UTC(2026, 10, 20, 9, 30),
     ...shot.session,
   };
-  return { launch: { directory: folder.path, mode: shot.mode ?? null, lang: "en" }, folder, session };
+  const directory = shot.welcome ? null : folder.path;
+  return { launch: { directory, mode: shot.mode ?? null, lang: "en" }, folder, session };
 }
 
 // ---- static server for dist/ and demo/ ----------------------------------------------
@@ -154,7 +157,7 @@ async function waitFor(cdp, expression, what, timeout = 8000) {
   throw new Error(`timed out waiting for ${what}`);
 }
 
-const imagesLoaded = `document.images.length > 0 && [...document.images].every((i) => i.complete && i.naturalWidth > 0)`;
+const imagesLoaded = `(document.images.length > 0 || !!document.querySelector("main svg")) && [...document.images].every((i) => i.complete && i.naturalWidth > 0)`;
 
 async function press(cdp, key) {
   const digit = /^\d$/.test(key);
