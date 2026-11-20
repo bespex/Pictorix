@@ -3,6 +3,7 @@
   import type { ImageFile } from "../lib/core/types";
   import { t } from "../lib/i18n.svelte";
   import PreviewPopover from "./PreviewPopover.svelte";
+  import Hint from "./Hint.svelte";
   import { play } from "../lib/animate";
 
   let {
@@ -75,14 +76,18 @@
             stroke-linejoin="round"
           />
         </svg>
-        <span class="key">{rating === 10 ? "0" : rating}</span>
+        <span class="value">
+          {rating}{#if rating === 10}<kbd class="key">0</kbd>{/if}
+        </span>
         {#if counts.get(String(rating))}
-          <span class="count">{counts.get(String(rating))}</span>
+          <span class="count" title={t("vote.rate.count", counts.get(String(rating)) ?? 0, rating)}>
+            {counts.get(String(rating))}
+          </span>
         {/if}
       </button>
     {/each}
   </div>
-  <div class="hint">{t("vote.rate.hint")}</div>
+  <div class="hint"><Hint text={t("vote.rate.hint")} /></div>
 </div>
 
 {#if preview}
@@ -136,10 +141,20 @@
     stroke: var(--mark);
   }
 
-  .key {
-    font-size: 11px;
-    color: var(--text-3);
+  .value {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 12px;
+    color: var(--text-2);
     font-weight: 600;
+  }
+
+  .key {
+    min-width: 0;
+    padding: 0 3px;
+    font-size: 9px;
+    line-height: 1.4;
   }
 
   .count {
