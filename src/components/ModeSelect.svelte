@@ -1,14 +1,10 @@
 <script lang="ts">
+  import ModeArt from "./ModeArt.svelte";
   import { api, type FolderInfo, type Journal } from "../lib/api";
   import { estimateVotes, Session, type SessionData } from "../lib/core/session";
   import type { Mode } from "../lib/core/types";
   import { confirm } from "../lib/dialog.svelte";
   import { formatDate, lang, setLang, t, tk } from "../lib/i18n.svelte";
-  import orderImg from "../assets/modes/order.png";
-  import simpleImg from "../assets/modes/simple-knockout.png";
-  import fullImg from "../assets/modes/full-knockout.png";
-  import rateImg from "../assets/modes/rate.png";
-  import categorizeImg from "../assets/modes/categorize.png";
 
   let {
     folder,
@@ -51,19 +47,6 @@
   function modeOf(card: CardId): Mode {
     if (card === "knockout") return fullKnockout ? "full-knockout" : "simple-knockout";
     return card;
-  }
-
-  function image(card: CardId): string {
-    switch (card) {
-      case "order":
-        return orderImg;
-      case "knockout":
-        return fullKnockout ? fullImg : simpleImg;
-      case "rate":
-        return rateImg;
-      case "categorize":
-        return categorizeImg;
-    }
   }
 
   function possible(card: CardId): boolean {
@@ -184,7 +167,7 @@
           }}
         >
           <div class="top">
-            <img src={image(card)} alt="" />
+            <div class="art"><ModeArt mode={modeOf(card)} /></div>
             <div class="text">
               <div class="title-row">
                 <h2>{tk(`mode.${card}`)}</h2>
@@ -343,11 +326,15 @@
     gap: 14px;
   }
 
-  .top img {
-    width: 64px;
-    height: 64px;
+  .art {
+    width: 148px;
     flex-shrink: 0;
-    border-radius: 8px;
+    align-self: center;
+  }
+
+  .text {
+    flex: 1;
+    min-width: 0;
   }
 
   .title-row {
