@@ -1,0 +1,9 @@
+node_modules
+/dist
+/.scratch
+.DS_Store
+*.local
+vite.config.ts.timestamp-*
+.idea
+.vscode/*
+!.vscode/extensions.json
