@@ -76,6 +76,7 @@ npm test                     # voting logic (Vitest)
 npm run check                # type check (svelte-check)
 cargo test --manifest-path src-tauri/Cargo.toml   # file operations (needs an existing dist/ folder)
 node tools/screenshots/shoot.mjs --site   # screenshots for the website, from the real frontend in headless Chromium
+tools/icons.sh               # all app icons from assets/icon.svg (32 px up) and assets/icon-small.svg (16, 24 px)
 npm run tauri build          # packages: .deb and .AppImage on Linux, setup .exe (NSIS) on Windows
 ```
 
