@@ -94,3 +94,25 @@ jobs:
             **Windows 10/11** - run `Pictorix_*_x64-setup.exe`. No admin rights needed; Pictorix offers new versions itself.
 
             > The Windows installer is not code-signed yet, so SmartScreen may warn about an unknown publisher: click *More info* and then *Run anyway*.
+
+  # tauri-action writes API asset URLs into latest.json while the release is a draft; those count
+  # against GitHub's limit for anonymous API calls, so point them to the plain download URLs.
+  updater-urls:
+    needs: release
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TAG: ${{ github.ref_name }}
+    steps:
+      - name: Point latest.json to the download URLs
+        run: |
+          id=$(gh api "repos/$GITHUB_REPOSITORY/releases" --jq ".[] | select(.tag_name == \"$TAG\") | .id")
+          gh api "repos/$GITHUB_REPOSITORY/releases/$id/assets" --jq '.[] | "\(.id) \(.name)"' > assets.txt
+          gh release download "$TAG" -R "$GITHUB_REPOSITORY" -p latest.json
+          mkdir out
+          jq --rawfile a assets.txt --arg base "https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/" '
+            ($a | split("\n") | map(select(length > 0) | split(" ") | {key: .[0], value: .[1]}) | from_entries) as $names
+            | .platforms |= map_values(.url |= (if startswith("https://api.github.com/") then $base + $names[split("/") | last] else . end))
+          ' latest.json > out/latest.json
+          jq '.platforms | map_values(.url)' out/latest.json
+          gh release upload "$TAG" out/latest.json -R "$GITHUB_REPOSITORY" --clobber
