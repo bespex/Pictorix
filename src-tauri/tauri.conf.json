@@ -1,0 +1,57 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Pictorix",
+  "mainBinaryName": "pictorix",
+  "version": "2.0.0",
+  "identifier": "eu.spex.pictorix",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Pictorix",
+        "width": 1280,
+        "height": 860,
+        "minWidth": 900,
+        "minHeight": 640,
+        "visible": false,
+        "dragDropEnabled": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' asset: http://asset.localhost data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'",
+      "assetProtocol": {
+        "enable": true,
+        "scope": []
+      }
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["deb", "rpm", "appimage", "nsis", "msi"],
+    "category": "Photography",
+    "shortDescription": "Sort, rank and rate photos one decision at a time",
+    "longDescription": "Pictorix shows one image or one pair of images at a time and asks a single question. When you are done, it renames the files or moves them into folders.",
+    "copyright": "Copyright (c) 2023-2026 Bert Speckels, MIT License",
+    "license": "MIT",
+    "publisher": "Bert Speckels",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "linux": {
+      "deb": { "section": "graphics" }
+    },
+    "windows": {
+      "nsis": { "installMode": "currentUser" }
+    }
+  }
+}
