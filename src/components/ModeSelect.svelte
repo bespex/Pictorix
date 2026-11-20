@@ -205,7 +205,7 @@
             </div>
           </div>
           <div class="bottom">
-            <span class="example mono">{tk(`mode.${card}.example`)}</span>
+            <span class="example mono" title={t("select.result")}>→ {tk(`mode.${card}.example`)}</span>
             <span class="votes">{possible(card) ? t("select.votes", estimates[mode]) : t("select.tooFew")}</span>
           </div>
         </div>

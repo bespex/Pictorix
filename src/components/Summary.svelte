@@ -39,6 +39,12 @@
   const plan = $derived(planFiles(mode, outcomes, { replacePrefix }));
   const unchanged = $derived(method === "move" ? plan.filter((p) => !changes(p)).length : 0);
   const copyFolderName = $derived(toFolderName(copyFolder));
+  /** The one button that changes files says what it does and to how many. */
+  const applyLabel = $derived(
+    method === "copy"
+      ? t("summary.apply.copy", plan.length, copyFolderName)
+      : t(categorize ? "summary.apply.categorize" : "summary.apply", plan.length - unchanged),
+  );
 
   /** Categorize: one section per category, in the order the categories were created. */
   const groups = $derived.by((): { title: string | null; items: PlannedFile[] }[] => {
@@ -90,6 +96,7 @@
     <div class="title-row">
       <h1>{t("summary.title")}</h1>
       <span class="muted">{tk(`mode.${mode}`)} · {t("summary.files", plan.length)}</span>
+      <span class="mono path muted" title={folder.path}>{folder.displayPath}</span>
     </div>
     <div class="muted">{tk(`mode.${mode}.rename`)}</div>
 
@@ -143,7 +150,9 @@
           <div class="card" class:same={method === "move" && !changes(item)}>
             <div class="image">
               <Thumb path={item.file.path} size={340} alt={item.file.name} />
-              <span class="badge" style:background={b.background} style:color={b.color}>{b.text}</span>
+              {#if !categorize}
+                <span class="badge" style:background={b.background} style:color={b.color}>{b.text}</span>
+              {/if}
             </div>
             <div class="new" title={targetPath(item)}>
               {method === "copy" ? `${copyFolderName}/` : ""}{targetPath(item)}
@@ -165,14 +174,16 @@
       {:else if error}
         <div class="problem">{error}</div>
       {:else}
-        <span class="hint">{t("summary.safe")}{unchanged ? ` · ${t("summary.unchanged", unchanged)}` : ""}</span>
+        <span class="hint">
+          {t("summary.safe", applyLabel)}{unchanged ? ` · ${t("summary.unchanged", unchanged)}` : ""}
+        </span>
       {/if}
     </div>
     <div class="buttons">
       <button class="btn ghost" onclick={onBack} disabled={applying}>‹ {t("summary.back")}</button>
       <button class="btn" onclick={discard} disabled={applying}>{t("summary.discard")}</button>
       <button class="btn primary" onclick={apply} disabled={applying || (method === "copy" && !copyFolderName)}>
-        {applying ? t("summary.applying") : t("summary.apply")}
+        {applying ? t("summary.applying") : applyLabel}
       </button>
     </div>
   </footer>
@@ -199,6 +210,15 @@
     display: flex;
     align-items: baseline;
     gap: 12px;
+    min-width: 0;
+  }
+
+  .path {
+    margin-left: auto;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   h1 {

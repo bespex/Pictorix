@@ -1,10 +1,10 @@
 <script lang="ts">
   import { categoryColor, textColorOn } from "../lib/categoryColors";
-  import { DEFAULT_CATEGORY } from "../lib/core/session";
   import { toFolderName } from "../lib/core/plan";
   import type { ImageFile } from "../lib/core/types";
   import { t } from "../lib/i18n.svelte";
   import PreviewPopover from "./PreviewPopover.svelte";
+  import Hint from "./Hint.svelte";
   import { play } from "../lib/animate";
 
   let {
@@ -89,6 +89,7 @@
         bind:this={chips[category]}
         style:background={color}
         style:color={textColorOn(color)}
+        title={t("vote.categorize.chip")}
         onclick={() => assign(category)}
         oncontextmenu={(e) => showPreview(category, e)}
       >
@@ -102,21 +103,20 @@
         bind:this={input}
         bind:value={text}
         placeholder={t("vote.categorize.new")}
+        title={t("vote.categorize.input")}
         onkeydown={onInputKey}
         spellcheck="false"
         maxlength="60"
       />
-      <button class="btn" tabindex="-1" disabled={!cleaned} onclick={() => add(false)}>+</button>
+      <button class="btn" tabindex="-1" disabled={!cleaned} title={t("vote.categorize.add")} onclick={() => add(false)}>
+        +
+      </button>
     </div>
   </div>
   {#if text && cleaned !== text.trim()}
     <div class="hint">→ <span class="mono">{cleaned || "–"}</span></div>
   {/if}
-  <div class="hint">
-    {t("vote.categorize.hint", DEFAULT_CATEGORY)} · <kbd>Tab</kbd>
-    {t("vote.categorize.new")} · <kbd>Ctrl</kbd>+<kbd>Enter</kbd>
-    {t("vote.categorize.add")} + ✓
-  </div>
+  <div class="hint"><Hint text={t("vote.categorize.hint")} /></div>
 </div>
 
 {#if preview}

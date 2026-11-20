@@ -8,6 +8,7 @@
   import { t, tk } from "../lib/i18n.svelte";
   import RateBar from "./RateBar.svelte";
   import CategoryBar from "./CategoryBar.svelte";
+  import Hint from "./Hint.svelte";
   import { fit } from "../lib/fit";
   import { play } from "../lib/animate";
 
@@ -41,6 +42,7 @@
     return session.canUndo;
   });
   const compare = $derived(isCompareMode(session.mode));
+  const knockout = $derived(session.mode === "simple-knockout" || session.mode === "full-knockout");
   const percent = $derived(Math.round((100 * progress.done) / Math.max(1, progress.done + progress.remaining)));
 
   let animating = false;
@@ -233,10 +235,12 @@
 <div class="vote">
   <header>
     <div class="title">
-      <button class="btn ghost back" onclick={onBack} title={t("vote.saved")}>‹ {t("vote.back")}</button>
+      <button class="btn ghost back" onclick={onBack} title={t("vote.saved")}>
+        ‹ {t("vote.back")} <span class="saved">· {t("vote.back.saved")}</span>
+      </button>
       <div>
-        <h1>{tk(`mode.${session.mode}`)}</h1>
-        <div class="muted desc">{tk(`mode.${session.mode}.description`)}</div>
+        <h1 title={tk(`mode.${session.mode}.description`)}>{tk(`mode.${session.mode}`)}</h1>
+        <div class="question">{tk(`vote.question.${session.mode}`)}</div>
       </div>
     </div>
     <div class="meta">
@@ -258,22 +262,29 @@
   <section class="stage" class:compare>
     {#if question?.kind === "pair"}
       <div class="slot" bind:this={leftSlot}>
-        <div class="label"><kbd>⏎</kbd> <span>{question.left.name}</span></div>
+        <div class="label"><span>{question.left.name}</span></div>
         <button class="frame clickable" onclick={keepOrder} tabindex="-1">
           <img src={imageUrl(question.left.path)} alt={question.left.name} draggable="false" use:fit />
         </button>
+        <div class="pick"><kbd>⏎ Enter</kbd> {t(knockout ? "vote.pick.left.knockout" : "vote.pick.left")}</div>
       </div>
       <div class="slot" bind:this={rightSlot}>
-        <div class="label"><kbd>←</kbd> <span>{question.right.name}</span></div>
+        <div class="label"><span>{question.right.name}</span></div>
         <button class="frame clickable" onclick={swapOrder} tabindex="-1">
           <img src={imageUrl(question.right.path)} alt={question.right.name} draggable="false" use:fit />
         </button>
+        <div class="pick"><kbd>←</kbd> {t(knockout ? "vote.pick.right.knockout" : "vote.pick.right")}</div>
       </div>
     {:else if question?.kind === "single"}
       <div class="slot single">
         <div class="label"><span>{question.image.name}</span></div>
         {#if session.mode === "categorize"}
-          <button class="frame clickable" tabindex="-1" onclick={() => categoryBar?.assign(DEFAULT_CATEGORY)}>
+          <button
+            class="frame clickable"
+            tabindex="-1"
+            title={t("vote.categorize.image", DEFAULT_CATEGORY)}
+            onclick={() => categoryBar?.assign(DEFAULT_CATEGORY)}
+          >
             <img src={imageUrl(question.image.path)} alt={question.image.name} draggable="false" use:fit />
           </button>
         {:else}
@@ -287,7 +298,7 @@
 
   <section class="controls">
     {#if compare}
-      <div class="hint center">{t("vote.compare.hint")}</div>
+      <div class="hint center"><Hint text={t(knockout ? "vote.knockout.hint" : "vote.compare.hint")} /></div>
     {:else if session.mode === "rate"}
       <RateBar bind:this={rateBar} {counts} assigned={(v) => session.assigned(v)} onRate={(r) => commit(String(r))} />
     {:else}
@@ -303,17 +314,35 @@
   </section>
 
   <footer>
-    <button class="btn" onclick={restart} disabled={!canUndo}>↺ {t("vote.restart")}</button>
+    <button class="btn ghost restart" onclick={restart} disabled={!canUndo}>↺ {t("vote.restart")}</button>
     <div class="progress">
       <div class="stage-text">
-        <strong>{question ? tk(question.stage.key, ...question.stage.args) : ""}</strong>
+        <strong>
+          {compare ? t("stage.order", progress.done) : question ? tk(question.stage.key, ...question.stage.args) : ""}
+        </strong>
         <span class="muted">
+          {#if knockout && question}· {tk(question.stage.key, ...question.stage.args)}{/if}
           · {compare ? t("vote.remaining", progress.remaining) : t("vote.remainingExact", progress.remaining)}
+          {#if progress.remaining <= 1}· {t("vote.next")}{/if}
         </span>
       </div>
       <div class="track"><div class="fill" style:width="{percent}%"></div></div>
     </div>
-    <button class="btn" onclick={undo} disabled={!canUndo} title="Ctrl+Z / Backspace">↶ {t("vote.undo")}</button>
+    <button class="btn" onclick={undo} disabled={!canUndo} title="Ctrl+Z / Backspace">
+      ↶ {t("vote.undo")}
+      <kbd class="undo-key" aria-label="Backspace">
+        <svg viewBox="0 0 24 16" width="14" height="10" aria-hidden="true">
+          <path
+            d="M8 1h13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8L1 8z M12 5l6 6 M18 5l-6 6"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linejoin="round"
+            stroke-linecap="round"
+          />
+        </svg>
+      </kbd>
+    </button>
   </footer>
 </div>
 
@@ -351,8 +380,47 @@
     font-size: 19px;
   }
 
-  .desc {
+  .question {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .saved {
+    font-size: 12px;
+    color: var(--text-3);
+  }
+
+  .pick {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-2);
+    min-height: 26px;
+  }
+
+  .pick kbd {
     font-size: 13px;
+    padding: 1px 8px;
+  }
+
+  .restart {
+    color: var(--text-3);
+  }
+
+  .restart:hover:not(:disabled) {
+    color: var(--danger);
+  }
+
+  .undo-key {
+    margin-left: 4px;
+    min-width: 0;
+    padding: 0 4px;
+    line-height: 1;
+    vertical-align: -1px;
   }
 
   .meta {
