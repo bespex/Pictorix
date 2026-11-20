@@ -1,6 +1,6 @@
 [package]
 name = "pictorix"
-version = "2.0.0"
+version = "2.1.0"
 description = "Sort, rank and rate a folder full of photos - one quick decision at a time."
 authors = ["Bert Speckels"]
 license = "MIT"
