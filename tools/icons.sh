@@ -15,7 +15,7 @@ rm -rf "$out/android" "$out/ios"
 
 # frames of the .ico files: 16, 24, 32, 48, 64, 256
 frame() { identify -format '%s %w\n' "$1" | awk -v w="$2" '$2 == w { print $1; exit }'; }
-for size in 16 24; do convert "$tmp/icon.ico[$(frame "$tmp/icon.ico" $size)]" "$out/${size}x${size}.png"; done
+for size in 16 24; do convert "$tmp/icon.ico[$(frame "$tmp/icon.ico" $size)]" "PNG32:$out/${size}x${size}.png"; done
 big="$out/icon.ico"
 convert "$out/16x16.png" "$out/24x24.png" \
   "$big[$(frame "$big" 32)]" "$big[$(frame "$big" 48)]" "$big[$(frame "$big" 64)]" "$big[$(frame "$big" 256)]" \
