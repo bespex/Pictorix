@@ -3,15 +3,14 @@ name: Build
 on:
   push:
     branches: [main]
-    tags: ["v*"]
   pull_request:
 
 jobs:
   test:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -34,11 +33,9 @@ jobs:
       matrix:
         platform: [ubuntu-22.04, windows-latest]
     runs-on: ${{ matrix.platform }}
-    permissions:
-      contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -50,22 +47,16 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev
       - run: npm ci
-      # builds .deb/.rpm/.AppImage on Linux and .msi/.exe (NSIS) on Windows;
-      # on a tag it creates a draft release with all packages attached
-      - uses: tauri-apps/tauri-action@v0
+      # test packages for every push; releases are built by release.yml
+      - name: Build packages
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tagName: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
-          releaseName: Pictorix ${{ github.ref_name }}
-          releaseDraft: true
-      - uses: actions/upload-artifact@v4
-        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
+        run: npm run tauri build -- --bundles ${{ runner.os == 'Linux' && 'deb,appimage' || 'nsis' }}
+      - uses: actions/upload-artifact@v7
         with:
           name: pictorix-${{ runner.os }}
           path: |
             src-tauri/target/release/bundle/**/*.deb
-            src-tauri/target/release/bundle/**/*.rpm
             src-tauri/target/release/bundle/**/*.AppImage
-            src-tauri/target/release/bundle/**/*.msi
             src-tauri/target/release/bundle/**/*.exe

@@ -1,0 +1,96 @@
+name: Release
+
+# A tag v<version> builds the .deb and the AppImage (Ubuntu 22.04, so the AppImage runs on older
+# distributions too) and the Windows installer (NSIS), and attaches them to a draft release together
+# with latest.json - the file the updater of the AppImage and the Windows installation reads.
+# Publishing the draft makes the update visible; the be spex APT repository picks up the .deb then.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check tag matches app version
+        run: |
+          for version in "$(jq -r .version src-tauri/tauri.conf.json)" "$(jq -r .version package.json)" \
+                         "$(grep -m1 '^version' src-tauri/Cargo.toml | cut -d'"' -f2)"; do
+            if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+              echo "Tag $GITHUB_REF_NAME does not match version $version" >&2
+              exit 1
+            fi
+          done
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - name: System libraries
+        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - name: Rust tests
+        run: mkdir -p dist && cargo test --locked --manifest-path src-tauri/Cargo.toml
+
+  release:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: ubuntu-22.04
+            bundles: deb,appimage
+          - platform: windows-latest
+            bundles: nsis
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - name: System libraries (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev
+      - run: npm ci
+      - uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # the be spex updater key, see plugins.updater.pubkey in tauri.conf.json
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: Pictorix ${{ github.ref_name }}
+          releaseDraft: true
+          uploadUpdaterJson: true
+          args: --bundles ${{ matrix.bundles }}
+          releaseBody: |
+            ## Install
+
+            **Linux (Ubuntu, Mint, Debian, …)** - from the [be spex APT repository](https://bespex.run/apt/), which also keeps Pictorix up to date:
+
+            ```bash
+            sudo apt install pictorix
+            ```
+
+            Or download `Pictorix_*_amd64.deb` below and install it with `sudo apt install ./Pictorix_*_amd64.deb`.
+
+            **Linux, any distribution** - download `Pictorix_*_amd64.AppImage`, make it executable (`chmod +x`) and run it. It offers new versions itself.
+
+            **Windows 10/11** - run `Pictorix_*_x64-setup.exe`. No admin rights needed; Pictorix offers new versions itself.
+
+            > The Windows installer is not code-signed yet, so SmartScreen may warn about an unknown publisher: click *More info* and then *Run anyway*.

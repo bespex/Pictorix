@@ -7,6 +7,17 @@ Pictorix is the successor of [Image Organizr (iorg)](https://github.com/Skrrytch
 a time and asks a single question: *Which one comes first?*, *How many stars?* or *Which category?* When you are done,
 it renames the files or moves them into folders, so any file manager shows your result - no database, no lock-in.
 
+## Download
+
+| Platform | How | Updates |
+|----------|-----|---------|
+| Linux (Ubuntu, Mint, Debian, …) | `sudo apt install pictorix` from the [be spex APT repository](https://bespex.run/apt/) | with `apt` |
+| Linux, any distribution | `Pictorix_<version>_amd64.AppImage` from the [releases](https://github.com/bespex/Pictorix/releases/latest) | Pictorix offers them at start |
+| Windows 10/11 | `Pictorix_<version>_x64-setup.exe` from the [releases](https://github.com/bespex/Pictorix/releases/latest), no admin rights needed | Pictorix offers them at start |
+
+The `.deb` is attached to every release as well. The Windows installer is not code-signed yet, so SmartScreen may warn
+about an unknown publisher: click *More info* and then *Run anyway*.
+
 ## Modes
 
 | Mode | Question | Result |
@@ -64,7 +75,8 @@ npm run tauri dev            # run with hot reload
 npm test                     # voting logic (Vitest)
 npm run check                # type check (svelte-check)
 cargo test --manifest-path src-tauri/Cargo.toml   # file operations (needs an existing dist/ folder)
-npm run tauri build          # packages: .deb/.rpm/.AppImage on Linux, .msi/.exe on Windows
+node tools/screenshots/shoot.mjs --site   # screenshots for the website, from the real frontend in headless Chromium
+npm run tauri build          # packages: .deb and .AppImage on Linux, setup .exe (NSIS) on Windows
 ```
 
 ### Structure
@@ -81,6 +93,16 @@ src-tauri/src/      Rust backend
   apply.rs          checked two-phase rename/copy with journal and revert
   store.rs          saved sessions and journals in the app data directory
 ```
+
+### Releasing
+
+1. Set the new version in `package.json`, `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json`.
+2. Commit, then tag and push: `git tag v2.1.0 && git push origin v2.1.0`.
+3. [`release.yml`](.github/workflows/release.yml) tests, builds the `.deb`, the AppImage and the Windows installer and
+   attaches them to a **draft** release together with `latest.json`. It needs the repository secret
+   `TAURI_SIGNING_PRIVATE_KEY`, the be spex updater key (see `plugins.updater.pubkey`).
+4. Write the release notes and publish the draft. From then on the AppImage and Windows installations offer the update,
+   and the [be spex APT repository](https://github.com/bespex/packages) picks up the `.deb` within half an hour.
 
 ## License
 
