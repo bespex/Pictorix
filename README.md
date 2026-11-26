@@ -71,7 +71,7 @@ Requirements: Node.js 22, Rust (stable) and on Linux the WebKitGTK development p
 
 ```bash
 npm install
-npm run tauri dev            # run with hot reload
+./run.sh                     # run with hot reload (--release: optimized build)
 npm test                     # voting logic (Vitest)
 npm run check                # type check (svelte-check)
 cargo test --manifest-path src-tauri/Cargo.toml   # file operations (needs an existing dist/ folder)
